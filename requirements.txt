@@ -1,2 +1,5 @@
 mariadb
 python-dotenv
+fastapi[standard]
+uvicorn[standard]
+pydantic
