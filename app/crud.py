@@ -50,19 +50,19 @@ def get_recent_changes(limit: int = 10):
         return result
 
 
-if __name__ == "__main__":
-    print("--- STARTAR TEST AV CRUD ---")
-    
-    try:
-        test_change = DiaperChangeCreate(
-            adult_id=1, 
-            change_type_id=1, 
-            accident=False
-        )
-        
-        print("Testar att spara ett blöjbyte...")
-        res = create_diaper_change(test_change)
-        print(f"Resultat från databasen: {res}")
-        
-    except Exception as e:
-        print(f"Ett fel uppstod under testet: {e}")
+# if __name__ == "__main__":
+#     print("--- STARTAR TEST AV CRUD ---")
+#
+#     try:
+#         test_change = DiaperChangeCreate(
+#             adult_id=1, 
+#             change_type_id=1, 
+#             accident=False
+#         )
+#
+#         print("Testar att spara ett blöjbyte...")
+#         res = create_diaper_change(test_change)
+#         print(f"Resultat från databasen: {res}")
+#
+#     except Exception as e:
+#         print(f"Ett fel uppstod under testet: {e}")
