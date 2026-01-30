@@ -1,0 +1,11 @@
+ services:
+  db:
+    image: mariadb:latest
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: diaper_counter
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    volumes:
+      - ./init_db:/docker-entrypoint-initdb.d    
