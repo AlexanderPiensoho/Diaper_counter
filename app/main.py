@@ -1,10 +1,10 @@
 from fastapi import FastAPI
-from app.routes import router as diaper_router
+from app.routes import router
 
 
-app = FastAPI(Title="Diaper Counter API")
+app = FastAPI(title="Diaper Counter API")
 
-app.include_router(diaper_router, prefix="/api/v1")
+app.include_router(router, prefix="/api/v1")
 
 @app.get("/")
 def root():

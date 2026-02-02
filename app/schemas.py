@@ -16,3 +16,11 @@ class DiaperChangeCreate(BaseModel):
     change_type_id: int = Field(..., gt=0, description="1=Pee, 2=Poo, 3=Routine")
     accident: bool = False
     baby_id: int = 1 
+
+class DiaperChangeRead(BaseModel):
+    adult: str 
+    change_type: str
+    accident: bool = False
+    
+    class Config:
+        from_attributes = True
