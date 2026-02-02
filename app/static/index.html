@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blöjräknaren</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 font-sans min-h-screen flex flex-col items-center p-4">
+
+    <header class="w-full max-w-md mb-8 text-center">
+        <h1 class="text-3xl font-bold text-slate-800">Blöjräknaren</h1>
+        <p class="text-slate-500">Registrera blöjbyte</p>
+    </header>
+
+    <main class="w-full max-w-md bg-white rounded-3xl shadow-xl p-6 border border-slate-100">
+        <form id="diaperForm" class="space-y-6">
+            
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Vem bytte?</label>
+                <select id="adult_id" class="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-400 outline-none appearance-none">
+                    <option value="1">Pappa Alexander</option>
+                    <option value="2">Mamma Elin</option>
+                    <option value="3">Farmor Helena</option>
+                    <option value="4">Farfar Niklas</option>
+                    <option value="5">Faster Emilia</option>
+                    <option value="6">Mormor Monica</option>
+                    <option value="7">Morfar Micke</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Typ av byte</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button type="button" onclick="setType(1, this)" class="type-btn p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-center hover:border-blue-400 transition-all">
+                        <span class="block text-2xl"></span>
+                        <span class="text-xs font-bold">KISSBLÖJA</span>
+                    </button>
+                    <button type="button" onclick="setType(2, this)" class="type-btn p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-center hover:border-brown-400 transition-all">
+                        <span class="block text-2xl"></span>
+                        <span class="text-xs font-bold">BAJSBLÖJA</span>
+                    </button>
+                    <button type="button" onclick="setType(3, this)" class="type-btn p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-center hover:border-green-400 transition-all">
+                        <span class="block text-2xl"></span>
+                        <span class="text-xs font-bold">RUTIN-BYTE</span>
+                    </button>
+                </div>
+                <input type="hidden" id="change_type_id" required>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-red-50 rounded-2xl">
+                <span class="font-semibold text-red-700">SKEDDE EN OLYCKA (KISSAD ELLER BAJSAD PÅ)?</span>
+                <input type="checkbox" id="accident" class="w-6 h-6 rounded-full text-red-600 focus:ring-red-500">
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all">
+               byte registrerat 
+            </button>
+        </form>
+    </main>
+
+    <div id="statusMessage" class="mt-4 text-sm font-medium hidden"></div>
+
+    <script>
+        let selectedTypeId = null;
+
+        function setType(id, btn) {
+            selectedTypeId = id;
+            document.getElementById('change_type_id').value = id;
+            // Reset styles
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-blue-50'));
+            // Highlight selected
+            btn.classList.add('border-blue-500', 'bg-blue-50');
+        }
+
+        document.getElementById('diaperForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const status = document.getElementById('statusMessage');
+            
+            const data = {
+                adult_id: parseInt(document.getElementById('adult_id').value),
+                change_type_id: parseInt(document.getElementById('change_type_id').value),
+                accident: document.getElementById('accident').checked,
+                baby_id: 1
+            };
+
+            try {
+                const response = await fetch('/api/v1/changes/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    status.innerText = "Sparat!";
+                    status.className = "mt-4 text-green-600 block";
+                    document.getElementById('diaperForm').reset();
+                    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-blue-50'));
+                } else {
+                    status.innerText = "Något gick fel...";
+                    status.className = "mt-4 text-red-600 block";
+                }
+            } catch (err) {
+                status.innerText = "Kunde inte nå servern";
+                status.className = "mt-4 text-red-600 block";
+            }
+        };
+    </script>
+</body>
+</html>
