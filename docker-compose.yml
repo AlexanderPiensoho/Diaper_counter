@@ -9,3 +9,10 @@
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
     volumes:
       - ./init_db:/docker-entrypoint-initdb.d    
+  app:
+     build:
+       context: .
+       dockerfile: Dockerfile
+     ports:
+       - "2000:2000"
+      
