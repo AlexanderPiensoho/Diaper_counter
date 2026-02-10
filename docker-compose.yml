@@ -1,18 +1,29 @@
- services:
+services:
   db:
     image: mariadb:latest
+    container_name: diaper_db
+    restart: always
     ports:
       - "3306:3306"
     environment:
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD} 
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: diaper_counter
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
     volumes:
-      - ./init_db:/docker-entrypoint-initdb.d    
+      - ./init_db:/docker-entrypoint-initdb.d
+
   app:
-     build:
-       context: .
-       dockerfile: Dockerfile
-     ports:
-       - "2000:2000"
-      
+    build: .
+    container_name: diaper_app
+    ports:
+      - "2000:8000"
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=diaper_counter
+      - DB_USER=root
+      - DB_PASSWORD=${MARIADB_PASSWORD}
