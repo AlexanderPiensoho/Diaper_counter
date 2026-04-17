@@ -71,7 +71,7 @@ docker exec -i "$DB_CONTAINER" mariadb \
     "$DB_NAME" < "$MIGRATION_SQL"
 
 echo "==> Bygger om och startar app-containern (databasen rörs inte)"
-docker-compose up -d --no-deps --build app
+docker compose up -d --no-deps --build app
 
 echo
 echo "==> Klart. Verifiera med:"
