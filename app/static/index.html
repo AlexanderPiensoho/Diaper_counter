@@ -3,108 +3,496 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blöjräknaren</title>
+    <title>Henning's Logg</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .feed-enter { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        #toast { transition: opacity 0.3s, transform 0.3s; }
+    </style>
 </head>
-<body class="bg-slate-50 font-sans min-h-screen flex flex-col items-center p-4">
+<body class="bg-slate-100 font-sans min-h-screen">
 
-    <header class="w-full max-w-md mb-8 text-center">
-        <h1 class="text-3xl font-bold text-slate-800">Blöjräknaren</h1>
-        <p class="text-slate-500">Registrera blöjbyte</p>
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div class="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-slate-800">Hennings logg 👶</h1>
+                <p class="text-xs text-slate-400">Förd med kärlek</p>
+            </div>
+        </div>
     </header>
 
-    <main class="w-full max-w-md bg-white rounded-3xl shadow-xl p-6 border border-slate-100">
-        <form id="diaperForm" class="space-y-6">
-            
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Vem bytte?</label>
-                <select id="adult_id" class="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-blue-400 outline-none appearance-none">
-                    <option value="1">Pappa Alexander</option>
-                    <option value="2">Mamma Elin</option>
-                    <option value="3">Farmor Helena</option>
-                    <option value="4">Farfar Niklas</option>
-                    <option value="5">Faster Emilia</option>
-                    <option value="6">Mormor Monica</option>
-                    <option value="7">Morfar Micke</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Typ av byte</label>
-                <div class="grid grid-cols-3 gap-3">
-                    <button type="button" onclick="setType(1, this)" class="type-btn p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-center hover:border-blue-400 transition-all">
-                        <span class="block text-2xl"></span>
-                        <span class="text-xs font-bold">KISSBLÖJA</span>
-                    </button>
-                    <button type="button" onclick="setType(2, this)" class="type-btn p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-center hover:border-brown-400 transition-all">
-                        <span class="block text-2xl"></span>
-                        <span class="text-xs font-bold">BAJSBLÖJA</span>
-                    </button>
-                    <button type="button" onclick="setType(3, this)" class="type-btn p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-center hover:border-green-400 transition-all">
-                        <span class="block text-2xl"></span>
-                        <span class="text-xs font-bold">RUTIN-BYTE</span>
-                    </button>
-                </div>
-                <input type="hidden" id="change_type_id" required>
-            </div>
-
-            <div class="flex items-center justify-between p-4 bg-red-50 rounded-2xl">
-                <span class="font-semibold text-red-700">SKEDDE EN OLYCKA (KISSAD ELLER BAJSAD PÅ)?</span>
-                <input type="checkbox" id="accident" class="w-6 h-6 rounded-full text-red-600 focus:ring-red-500">
-            </div>
-
-            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all">
-               byte registrerat 
+    <!-- Tab bar -->
+    <div class="max-w-lg mx-auto px-4 pt-4">
+        <div class="flex bg-slate-200 rounded-2xl p-1 gap-1">
+            <button onclick="switchTab('diaper')" id="tab-diaper" class="tab-btn flex-1 py-2 rounded-xl text-sm font-semibold transition-all bg-white shadow text-slate-800">
+                🧷 Blöja
             </button>
-        </form>
+            <button onclick="switchTab('sleep')" id="tab-sleep" class="tab-btn flex-1 py-2 rounded-xl text-sm font-semibold transition-all text-slate-500">
+                😴 Sömn
+            </button>
+            <button onclick="switchTab('food')" id="tab-food" class="tab-btn flex-1 py-2 rounded-xl text-sm font-semibold transition-all text-slate-500">
+                🍼 Mat
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl text-sm font-semibold shadow-lg opacity-0 pointer-events-none"></div>
+
+    <main class="max-w-lg mx-auto px-4 pb-8 space-y-4 mt-4">
+
+        <!-- ===== DIAPER TAB ===== -->
+        <section id="pane-diaper">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4">Registrera blöjbyte</h2>
+                <form id="diaperForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Vem bytte?</label>
+                        <select id="d_adult_id" class="w-full p-3 bg-slate-100 rounded-xl border-none focus:ring-2 focus:ring-blue-400 outline-none">
+                            <option value="1">Pappa Alexander</option>
+                            <option value="2">Mamma Elin</option>
+                            <option value="3">Farmor Helena</option>
+                            <option value="4">Farfar Niklas</option>
+                            <option value="5">Faster Emilia</option>
+                            <option value="6">Mormor Monica</option>
+                            <option value="7">Morfar Micke</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Typ av byte</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" onclick="setDiaperType(1, this)"
+                                class="diaper-type-btn p-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-center hover:border-blue-300 transition-all">
+                                <span class="block text-xl">💧</span>
+                                <span class="text-xs font-bold text-slate-600">KISSBLÖJA</span>
+                            </button>
+                            <button type="button" onclick="setDiaperType(2, this)"
+                                class="diaper-type-btn p-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-center hover:border-amber-300 transition-all">
+                                <span class="block text-xl">💩</span>
+                                <span class="text-xs font-bold text-slate-600">BAJSBLÖJA</span>
+                            </button>
+                            <button type="button" onclick="setDiaperType(3, this)"
+                                class="diaper-type-btn p-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-center hover:border-green-300 transition-all">
+                                <span class="block text-xl">🔄</span>
+                                <span class="text-xs font-bold text-slate-600">RUTIN</span>
+                            </button>
+                        </div>
+                        <input type="hidden" id="change_type_id">
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-red-50 rounded-xl">
+                        <span class="text-sm font-semibold text-red-700">Olycka?</span>
+                        <input type="checkbox" id="accident" class="w-5 h-5 rounded text-red-500 focus:ring-red-400">
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all">
+                        Registrera byte
+                    </button>
+                </form>
+            </div>
+
+            <!-- Diaper feed -->
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wide">Senaste byten</h2>
+                    <div class="flex gap-1">
+                        <button onclick="loadDiaperFeed(10, this)" class="feed-filter-btn active-filter px-2 py-1 rounded-lg text-xs font-semibold">10 st</button>
+                        <button onclick="loadDiaperFeed(25, this)" class="feed-filter-btn px-2 py-1 rounded-lg text-xs font-semibold text-slate-400">25 st</button>
+                    </div>
+                </div>
+                <div id="diaperFeed" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- ===== SLEEP TAB ===== -->
+        <section id="pane-sleep" class="hidden">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4">Registrera sömn</h2>
+                <form id="sleepForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Vem lade?</label>
+                        <select id="s_adult_id" class="w-full p-3 bg-slate-100 rounded-xl border-none focus:ring-2 focus:ring-indigo-400 outline-none">
+                            <option value="1">Pappa Alexander</option>
+                            <option value="2">Mamma Elin</option>
+                            <option value="3">Farmor Helena</option>
+                            <option value="4">Farfar Niklas</option>
+                            <option value="5">Faster Emilia</option>
+                            <option value="6">Mormor Monica</option>
+                            <option value="7">Morfar Micke</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Somnade</label>
+                            <input type="datetime-local" id="s_started_at"
+                                class="w-full p-3 bg-slate-100 rounded-xl border-none focus:ring-2 focus:ring-indigo-400 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Vaknade <span class="text-slate-400 font-normal">(valfritt)</span></label>
+                            <input type="datetime-local" id="s_ended_at"
+                                class="w-full p-3 bg-slate-100 rounded-xl border-none focus:ring-2 focus:ring-indigo-400 outline-none text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Anteckning <span class="text-slate-400 font-normal">(valfritt)</span></label>
+                        <input type="text" id="s_notes" placeholder="t.ex. svårt att somna..."
+                            class="w-full p-3 bg-slate-100 rounded-xl border-none focus:ring-2 focus:ring-indigo-400 outline-none text-sm">
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all">
+                        Registrera sömn
+                    </button>
+                </form>
+            </div>
+
+            <!-- Sleep feed -->
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wide">Sömnhistorik</h2>
+                    <div class="flex gap-1">
+                        <button onclick="loadSleepFeed(24, this)" class="feed-filter-btn active-filter px-2 py-1 rounded-lg text-xs font-semibold">24h</button>
+                        <button onclick="loadSleepFeed(48, this)" class="feed-filter-btn px-2 py-1 rounded-lg text-xs font-semibold text-slate-400">48h</button>
+                        <button onclick="loadSleepFeed(72, this)" class="feed-filter-btn px-2 py-1 rounded-lg text-xs font-semibold text-slate-400">72h</button>
+                        <button onclick="loadSleepFeed(168, this)" class="feed-filter-btn px-2 py-1 rounded-lg text-xs font-semibold text-slate-400">1v</button>
+                    </div>
+                </div>
+                <div id="sleepFeed" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- ===== FOOD TAB ===== -->
+        <section id="pane-food" class="hidden">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4">Registrera matning</h2>
+                <form id="foodForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Vem matade?</label>
+                        <select id="f_adult_id" class="w-full p-3 bg-slate-100 rounded-xl border-none focus:ring-2 focus:ring-green-400 outline-none">
+                            <option value="1">Pappa Alexander</option>
+                            <option value="2">Mamma Elin</option>
+                            <option value="3">Farmor Helena</option>
+                            <option value="4">Farfar Niklas</option>
+                            <option value="5">Faster Emilia</option>
+                            <option value="6">Mormor Monica</option>
+                            <option value="7">Morfar Micke</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Typ av matning</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" onclick="setFoodType('breast', this)"
+                                class="food-type-btn p-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-center hover:border-pink-300 transition-all">
+                                <span class="block text-xl">🤱</span>
+                                <span class="text-xs font-bold text-slate-600">BRÖST</span>
+                            </button>
+                            <button type="button" onclick="setFoodType('bottle', this)"
+                                class="food-type-btn p-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-center hover:border-green-300 transition-all">
+                                <span class="block text-xl">🍼</span>
+                                <span class="text-xs font-bold text-slate-600">FLASKA</span>
+                            </button>
+                            <button type="button" onclick="setFoodType('solid', this)"
+                                class="food-type-btn p-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-center hover:border-orange-300 transition-all">
+                                <span class="block text-xl">🥣</span>
+                                <span class="text-xs font-bold text-slate-600">FAST FÖDA</span>
+                            </button>
+                        </div>
+                        <input type="hidden" id="food_type">
+                    </div>
+
+                    <div id="amountWrapper" class="hidden">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Mängd (ml)</label>
+                        <input type="number" id="f_amount_ml" min="1" max="999" placeholder="t.ex. 120"
+                            class="w-full p-3 bg-slate-100 rounded-xl border-none focus:ring-2 focus:ring-green-400 outline-none text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Anteckning <span class="text-slate-400 font-normal">(valfritt)</span></label>
+                        <input type="text" id="f_notes" placeholder="t.ex. åt bra idag..."
+                            class="w-full p-3 bg-slate-100 rounded-xl border-none focus:ring-2 focus:ring-green-400 outline-none text-sm">
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow-md shadow-green-200 hover:bg-green-700 active:scale-95 transition-all">
+                        Registrera matning
+                    </button>
+                </form>
+            </div>
+
+            <!-- Food feed -->
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wide">Matningshistorik</h2>
+                    <div class="flex gap-1">
+                        <button onclick="loadFoodFeed(24, this)" class="feed-filter-btn active-filter px-2 py-1 rounded-lg text-xs font-semibold">24h</button>
+                        <button onclick="loadFoodFeed(48, this)" class="feed-filter-btn px-2 py-1 rounded-lg text-xs font-semibold text-slate-400">48h</button>
+                        <button onclick="loadFoodFeed(72, this)" class="feed-filter-btn px-2 py-1 rounded-lg text-xs font-semibold text-slate-400">72h</button>
+                        <button onclick="loadFoodFeed(168, this)" class="feed-filter-btn px-2 py-1 rounded-lg text-xs font-semibold text-slate-400">1v</button>
+                    </div>
+                </div>
+                <div id="foodFeed" class="space-y-2"></div>
+            </div>
+        </section>
+
     </main>
 
-    <div id="statusMessage" class="mt-4 text-sm font-medium hidden"></div>
-
     <script>
-        let selectedTypeId = null;
+        // ── Tab switching ────────────────────────────────────────────────
+        function switchTab(name) {
+            ['diaper', 'sleep', 'food'].forEach(t => {
+                document.getElementById('pane-' + t).classList.toggle('hidden', t !== name);
+                const btn = document.getElementById('tab-' + t);
+                btn.classList.toggle('active', t === name);
+                btn.classList.toggle('bg-white', t === name);
+                btn.classList.toggle('shadow', t === name);
+                btn.classList.toggle('text-slate-800', t === name);
+                btn.classList.toggle('text-slate-500', t !== name);
+            });
+        }
 
-        function setType(id, btn) {
-            selectedTypeId = id;
+        // ── Toast ────────────────────────────────────────────────────────
+        function showToast(msg, ok = true) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = `fixed top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl text-sm font-semibold shadow-lg ${ok ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`;
+            el.style.opacity = '1';
+            el.style.transform = 'translateX(-50%) translateY(0)';
+            setTimeout(() => { el.style.opacity = '0'; }, 2500);
+        }
+
+        // ── Filter button styling ────────────────────────────────────────
+        function setActiveFilter(btn) {
+            const group = btn.closest('div');
+            group.querySelectorAll('.feed-filter-btn').forEach(b => {
+                b.classList.remove('active-filter', 'bg-slate-800', 'text-white');
+                b.classList.add('text-slate-400');
+            });
+            btn.classList.add('active-filter', 'bg-slate-800', 'text-white');
+            btn.classList.remove('text-slate-400');
+        }
+
+        // ── Diaper ───────────────────────────────────────────────────────
+        let selectedDiaperTypeId = null;
+
+        function setDiaperType(id, btn) {
+            selectedDiaperTypeId = id;
             document.getElementById('change_type_id').value = id;
-            // Reset styles
-            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-blue-50'));
-            // Highlight selected
-            btn.classList.add('border-blue-500', 'bg-blue-50');
+            document.querySelectorAll('.diaper-type-btn').forEach(b => {
+                b.classList.remove('border-blue-400', 'bg-blue-50', 'border-amber-400', 'bg-amber-50', 'border-green-400', 'bg-green-50');
+            });
+            const colors = { 1: ['border-blue-400', 'bg-blue-50'], 2: ['border-amber-400', 'bg-amber-50'], 3: ['border-green-400', 'bg-green-50'] };
+            btn.classList.add(...colors[id]);
+        }
+
+        async function loadDiaperFeed(limit, btn) {
+            if (btn) setActiveFilter(btn);
+            const feed = document.getElementById('diaperFeed');
+            feed.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">Laddar...</p>';
+            try {
+                const res = await fetch(`/api/v1/changes/?limit=${limit}`);
+                const data = await res.json();
+                if (!data.length) { feed.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Inga byten registrerade.</p>'; return; }
+                feed.innerHTML = data.map(c => {
+                    const icons = { pee: '💧', poo: '💩', routine: '🔄' };
+                    const colors = { pee: 'bg-blue-50', poo: 'bg-amber-50', routine: 'bg-green-50' };
+                    const icon = icons[c.change_type] || '🧷';
+                    const bg = colors[c.change_type] || 'bg-slate-50';
+                    const accident = c.accident ? '<span class="ml-1 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">olycka</span>' : '';
+                    const time = c.change_time ? fmtTime(c.change_time) : '';
+                    return `<div class="feed-enter flex items-center justify-between ${bg} rounded-xl px-3 py-2">
+                        <span class="text-lg mr-2">${icon}</span>
+                        <span class="flex-1 text-sm font-medium text-slate-700">${c.adult}${accident}</span>
+                        <span class="text-xs text-slate-400">${time}</span>
+                    </div>`;
+                }).join('');
+            } catch {
+                feed.innerHTML = '<p class="text-xs text-red-400 text-center py-2">Kunde inte ladda.</p>';
+            }
         }
 
         document.getElementById('diaperForm').onsubmit = async (e) => {
             e.preventDefault();
-            const status = document.getElementById('statusMessage');
-            
+            if (!selectedDiaperTypeId) { showToast('Välj typ av byte', false); return; }
             const data = {
-                adult_id: parseInt(document.getElementById('adult_id').value),
-                change_type_id: parseInt(document.getElementById('change_type_id').value),
+                adult_id: parseInt(document.getElementById('d_adult_id').value),
+                change_type_id: selectedDiaperTypeId,
                 accident: document.getElementById('accident').checked,
                 baby_id: 1
             };
-
             try {
-                const response = await fetch('/api/v1/changes/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                if (response.ok) {
-                    status.innerText = "Sparat!";
-                    status.className = "mt-4 text-green-600 block";
+                const res = await fetch('/api/v1/changes/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (res.ok) {
+                    showToast('Byte sparat! 🧷');
                     document.getElementById('diaperForm').reset();
-                    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('border-blue-500', 'bg-blue-50'));
+                    document.querySelectorAll('.diaper-type-btn').forEach(b => b.classList.remove('border-blue-400', 'bg-blue-50', 'border-amber-400', 'bg-amber-50', 'border-green-400', 'bg-green-50'));
+                    selectedDiaperTypeId = null;
+                    loadDiaperFeed(10);
                 } else {
-                    status.innerText = "Något gick fel...";
-                    status.className = "mt-4 text-red-600 block";
+                    showToast('Något gick fel...', false);
                 }
-            } catch (err) {
-                status.innerText = "Kunde inte nå servern";
-                status.className = "mt-4 text-red-600 block";
-            }
+            } catch { showToast('Kunde inte nå servern', false); }
         };
+
+        // ── Sleep ────────────────────────────────────────────────────────
+        // Set default started_at to now
+        function setDefaultSleepStart() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('s_started_at').value = now.toISOString().slice(0, 16);
+        }
+
+        async function loadSleepFeed(hours, btn) {
+            if (btn) setActiveFilter(btn);
+            const feed = document.getElementById('sleepFeed');
+            feed.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">Laddar...</p>';
+            try {
+                const res = await fetch(`/api/v1/sleep/?hours=${hours}`);
+                const data = await res.json();
+                if (!data.length) { feed.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Ingen sömn registrerad.</p>'; return; }
+                feed.innerHTML = data.map(s => {
+                    const dur = s.duration_minutes != null ? `${Math.floor(s.duration_minutes / 60)}h ${s.duration_minutes % 60}m` : '<span class="text-indigo-500">Pågående</span>';
+                    const end = s.ended_at ? fmtTime(s.ended_at) : '–';
+                    return `<div class="feed-enter bg-indigo-50 rounded-xl px-3 py-2 flex items-center justify-between">
+                        <span class="text-lg mr-2">😴</span>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-slate-700">${s.adult}</p>
+                            <p class="text-xs text-slate-400">${fmtTime(s.started_at)} → ${end} · ${dur}</p>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch {
+                feed.innerHTML = '<p class="text-xs text-red-400 text-center py-2">Kunde inte ladda.</p>';
+            }
+        }
+
+        document.getElementById('sleepForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const startedVal = document.getElementById('s_started_at').value;
+            const endedVal = document.getElementById('s_ended_at').value;
+            // datetime-local is naive local time — convert to UTC ISO before sending
+            const toUtcIso = v => v ? new Date(v).toISOString() : null;
+            const data = {
+                adult_id: parseInt(document.getElementById('s_adult_id').value),
+                baby_id: 1,
+                started_at: toUtcIso(startedVal),
+                ended_at: toUtcIso(endedVal),
+                notes: document.getElementById('s_notes').value || null
+            };
+            if (startedVal && endedVal && new Date(endedVal) <= new Date(startedVal)) {
+                showToast('Vakn-tid måste vara efter somn-tid', false);
+                return;
+            }
+            try {
+                const res = await fetch('/api/v1/sleep/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (res.ok) {
+                    showToast('Sömn sparad! 😴');
+                    document.getElementById('sleepForm').reset();
+                    setDefaultSleepStart();
+                    loadSleepFeed(24);
+                } else {
+                    showToast('Något gick fel...', false);
+                }
+            } catch { showToast('Kunde inte nå servern', false); }
+        };
+
+        // ── Food ─────────────────────────────────────────────────────────
+        let selectedFoodType = null;
+
+        function setFoodType(type, btn) {
+            selectedFoodType = type;
+            document.getElementById('food_type').value = type;
+            document.querySelectorAll('.food-type-btn').forEach(b => {
+                b.classList.remove('border-pink-400', 'bg-pink-50', 'border-green-400', 'bg-green-50', 'border-orange-400', 'bg-orange-50');
+            });
+            const colors = { breast: ['border-pink-400', 'bg-pink-50'], bottle: ['border-green-400', 'bg-green-50'], solid: ['border-orange-400', 'bg-orange-50'] };
+            btn.classList.add(...colors[type]);
+            document.getElementById('amountWrapper').classList.toggle('hidden', type !== 'bottle');
+        }
+
+        async function loadFoodFeed(hours, btn) {
+            if (btn) setActiveFilter(btn);
+            const feed = document.getElementById('foodFeed');
+            feed.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">Laddar...</p>';
+            try {
+                const res = await fetch(`/api/v1/food/?hours=${hours}`);
+                const data = await res.json();
+                if (!data.length) { feed.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Ingen mat registrerad.</p>'; return; }
+                feed.innerHTML = data.map(f => {
+                    const icons = { breast: '🤱', bottle: '🍼', solid: '🥣' };
+                    const bgs = { breast: 'bg-pink-50', bottle: 'bg-green-50', solid: 'bg-orange-50' };
+                    const labels = { breast: 'Bröst', bottle: 'Flaska', solid: 'Fast föda' };
+                    const amount = f.amount_ml ? ` · ${f.amount_ml} ml` : '';
+                    return `<div class="feed-enter flex items-center justify-between ${bgs[f.food_type] || 'bg-slate-50'} rounded-xl px-3 py-2">
+                        <span class="text-lg mr-2">${icons[f.food_type] || '🍼'}</span>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-slate-700">${f.adult} · ${labels[f.food_type] || f.food_type}${amount}</p>
+                            ${f.notes ? `<p class="text-xs text-slate-400">${f.notes}</p>` : ''}
+                        </div>
+                        <span class="text-xs text-slate-400">${fmtTime(f.logged_at)}</span>
+                    </div>`;
+                }).join('');
+            } catch {
+                feed.innerHTML = '<p class="text-xs text-red-400 text-center py-2">Kunde inte ladda.</p>';
+            }
+        }
+
+        document.getElementById('foodForm').onsubmit = async (e) => {
+            e.preventDefault();
+            if (!selectedFoodType) { showToast('Välj typ av matning', false); return; }
+            const amountVal = document.getElementById('f_amount_ml').value;
+            const data = {
+                adult_id: parseInt(document.getElementById('f_adult_id').value),
+                baby_id: 1,
+                food_type: selectedFoodType,
+                amount_ml: amountVal ? parseInt(amountVal) : null,
+                notes: document.getElementById('f_notes').value || null
+            };
+            try {
+                const res = await fetch('/api/v1/food/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                if (res.ok) {
+                    showToast('Matning sparad! 🍼');
+                    document.getElementById('foodForm').reset();
+                    document.querySelectorAll('.food-type-btn').forEach(b => b.classList.remove('border-pink-400', 'bg-pink-50', 'border-green-400', 'bg-green-50', 'border-orange-400', 'bg-orange-50'));
+                    selectedFoodType = null;
+                    document.getElementById('amountWrapper').classList.add('hidden');
+                    loadFoodFeed(24);
+                } else {
+                    showToast('Något gick fel...', false);
+                }
+            } catch { showToast('Kunde inte nå servern', false); }
+        };
+
+        // ── Utilities ────────────────────────────────────────────────────
+        function fmtTime(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            const now = new Date();
+            const diffMs = now - d;
+            const diffMins = Math.floor(diffMs / 60000);
+            if (diffMins < 1) return 'just nu';
+            if (diffMins < 60) return `${diffMins}m sedan`;
+            if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h sedan`;
+            return d.toLocaleDateString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        // ── Init ─────────────────────────────────────────────────────────
+        setDefaultSleepStart();
+        loadDiaperFeed(10);
+        loadSleepFeed(24);
+        loadFoodFeed(24);
+
+        // Style the initial active filter buttons
+        document.querySelectorAll('.feed-filter-btn.active-filter').forEach(btn => {
+            btn.classList.add('bg-slate-800', 'text-white');
+            btn.classList.remove('text-slate-400');
+        });
     </script>
 </body>
 </html>
