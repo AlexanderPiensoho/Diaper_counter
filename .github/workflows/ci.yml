@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fail if secret files are tracked
+        run: |
+          set -e
+          offenders=$(git ls-files | grep -E '(^|/)\.env$|(^|/)\.env\.(local|prod|production|dev|development)$|credentials\.json$|secrets\.ya?ml$' || true)
+          if [ -n "$offenders" ]; then
+            echo "Secret-like files are tracked in the repo:"
+            echo "$offenders"
+            exit 1
+          fi
+
+      - name: Gitleaks scan (content-based)
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  unit-tests:
+    name: Unit tests + coverage
+    runs-on: ubuntu-latest
+    needs: secret-scan
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install libmariadb
+        run: sudo apt-get update && sudo apt-get install -y libmariadb-dev gcc
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run unit tests with coverage gate
+        run: pytest tests/unit
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: .coverage
+
+  integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    needs: secret-scan
+    services:
+      mariadb:
+        image: mariadb:latest
+        env:
+          MARIADB_ROOT_PASSWORD: testpw
+          MARIADB_DATABASE: diaper_counter
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASSWORD: testpw
+      DB_NAME: diaper_counter
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install libmariadb
+        run: sudo apt-get update && sudo apt-get install -y libmariadb-dev gcc
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run integration tests
+        run: pytest tests/integration --no-cov
+
+  docker-build:
+    name: Docker build
+    runs-on: ubuntu-latest
+    needs: secret-scan
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build . -t diaper-counter:ci
