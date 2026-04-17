@@ -1,4 +1,4 @@
-CREATE TABLE sleep_sessions (
+CREATE TABLE IF NOT EXISTS sleep_sessions (
     sleep_id INT PRIMARY KEY AUTO_INCREMENT,
     baby_id INT NOT NULL,
     adult_id INT NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE sleep_sessions (
     FOREIGN KEY (adult_id) REFERENCES adults(adult_id)
 );
 
-CREATE TABLE food_intake (
+CREATE TABLE IF NOT EXISTS food_intake (
     food_id INT PRIMARY KEY AUTO_INCREMENT,
     baby_id INT NOT NULL,
     adult_id INT NOT NULL,
