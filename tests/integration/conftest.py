@@ -51,15 +51,16 @@ def init_schema(db_available):
 
 @pytest.fixture(autouse=True)
 def clean_fact_tables():
-    """Wipe transaction tables between each test; keep lookup data."""
+    """Wipe transaction tables before each test so every case starts empty
+    (the init SQL seeds diaper_changes with sample rows we don't want)."""
     from app.db import get_connection
 
-    yield
     with get_connection() as conn:
         cursor = conn.cursor()
         for tbl in ["diaper_changes", "sleep_sessions", "food_intake"]:
             cursor.execute(f"DELETE FROM {tbl}")
         conn.commit()
+    yield
 
 
 @pytest.fixture
